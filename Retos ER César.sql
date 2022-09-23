@@ -1,4 +1,4 @@
-1) Number of words in Department_name                                       Example: Control and Credit
+1) Number of words in Department_name                                       Example: Control and Credit 3
 
 SELECT Department_name,
     (LENGTH(Department_name)-LENGTH(REPlace(Department_name,1,'')))+1 as Words
