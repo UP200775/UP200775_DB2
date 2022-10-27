@@ -1,0 +1,185 @@
+6)
+select (substr(first_name,1,1) || ' ' || last_name) "Employee names" 
+from employees;
+
+7)
+select CONCAT(CONCAT(first_name, ' '), last_name) Completo, email
+from employees
+where regexp_like(email, 'in','i');
+8)
+select MIN(last_name) "Fisrt last name" , MAX(last_name) "Last last name"
+from employees;
+9)
+select concat('$',
+regexp_replace(to_char(((salary*12)/52),'fm9999999.99'),'\.$','')) weekly_salary
+from employees
+where ((salary*12)/52)>=700 and ((salary*12)/52)<=3000;
+
+10)
+select
+SUBSTR(employees.first_name,1,1) ||' '|| employees.last_name  "Employee Name",
+jobs.job_title "Job"
+from employees, jobs
+where employees.job_id = jobs.job_id;
+
+11)
+select
+substr(first_name,1,1)
+||'.'||
+last_name "Employee Name",
+job_title "Job",min_salary ||'-'|| max_salary "Salary range",
+salary "Employee's salary"
+from employees, jobs
+where jobs.job_id = employees.job_id;
+
+12)
+select (SUBSTR(first_name,0,1) || '  ' || last_name ),department_name as NOMBRE
+from departments
+natural inner join employees;
+
+13)
+select (substr(first_name,0,1) || ' '|| last_name) as Employee_Name, department_name as Department_Name
+from departments  inner join employees using (department_id);
+
+14)
+select last_name, (DECODE(manager_id, null, 'nobody','somebody')) as Works_for
+from employees;
+
+15)
+SELECT SUBSTR(first_name, 1, 1) || ' ' || last_name "Employee_name", salary "Salary", NVL2(commission_pct, 'Yes', 'No') Commission
+FROM employees;
+
+16)
+select e.last_name, d.department_name, 
+       l.city, l.state_province
+from employees e full outer join departments d on e.department_id = d.department_id
+                full outer join locations l on d.location_id = l.location_id
+where department_name is not null
+order by last_name asc;
+
+17)
+select first_name,
+last_name, nvl(case  
+                when commission_pct is null then manager_id 
+                else commission_pct
+                end, '-1')hola                              
+from employees;
+
+18)
+select last_name, salary,
+    case when salary < 2999 then 'A'
+        when salary < 5999 then 'B'
+        when salary < 9999 then 'C'
+        when salary < 14999 then 'D'
+        when salary < 24999 then 'E'
+        end Grade_level
+from employees
+where department_id > 50
+order by salary asc;
+
+19)
+select e.last_name, department_name
+from employees e full join departments d 
+on e.department_id = d.department_id;
+20)
+select level, Last_name,
+       (case manager_id
+       when 100 then (select last_name from employees where employee_id=100)
+       when 101 then (select last_name from employees where employee_id=101)
+       when 102 then (select last_name from employees where employee_id=102)
+       when 124 then (select last_name from employees where employee_id=124)
+       when 149 then (select last_name from employees where employee_id=149)
+       when 201 then (select last_name from employees where employee_id=201)
+       when 103 then (select last_name from employees where employee_id=103)
+       when 205 then (select last_name from employees where employee_id=205)
+       else "-"
+       end) manager_name
+from employees
+start with employee_id = 100
+connect by prior employee_id = manager_id;
+
+21)
+select min(hire_date), max(hire_date),count(*)
+from employees;
+
+22)
+SELECT department_name AS "Department Name" , 
+       SUM(salary) AS "Salaries" 
+FROM employees e, departments d
+WHERE e.department_id = d.department_id
+GROUP BY ROLLUP(department_name)
+HAVING SUM(salary) BETWEEN 15000 AND 31000
+ORDER BY department_name ASC;
+
+23)
+
+24)select round(max(salary))
+from (select avg(salary) as salary
+from employees
+group by department_id);
+
+25)
+SELECT d.department_name, Sum(Salary)
+FROM employees e, departments d
+Where (d.department_id = e.department_id)
+GROUP BY d.department_name;
+
+26)
+SELECT d.department_name, NVL(job_id,'-'), SUM(salary)
+FROM employees e, departments d
+where d.department_id is not null
+    AND (e.department_id = d.department_id)
+GROUP BY ROLLUP(d.department_name, job_id)
+order by d.department_name, job_id;
+
+27)
+SELECT d.department_name AS "Department Name", e.job_id AS "Job Title", SUM(salary) AS "Monthly Cost"
+FROM employees e INNER JOIN departments d ON e.department_id = d.department_id
+GROUP BY CUBE(department_name, job_id)
+ORDER BY department_name;
+
+28)
+select  nvl(department_name,'-') as "Department Name", nvl(job_id,' -') as "JOB TITLE", sum(salary) AS "MONTHLY COST",
+case when department_name is null then 'NO'
+     else 'yes'
+     end "Departmen ID  Used"
+,case when job_id is null then 'NO'
+else 'yes'
+end "JOB ID Used"
+
+from (select d.department_name, e.job_id,e.salary
+      from employees e, DEPARTMENTS d
+     where d.department_id = e.department_id)
+
+GROUP BY CUBE(department_name,job_id)
+order by (department_name);
+
+29)
+
+select nvl(d.department_name, '-') as "department_name" ,nvl( e.job_id, '-') as "job_id" , nvl(l.city, '-') as "city", sum(e.salary)
+from employees e,  departments d, locations l
+where d.department_id = e.department_id 
+and 
+l.location_id = d.location_id
+
+GROUP BY grouping sets ((job_id,department_name),(city))
+order by department_name, city
+;
+
+30)
+select (substr(e.first_name,1,1)||' '|| e.last_name) as employee,to_char(department_id) as department_id  , '-' as department_name, '-' as city
+from employees e
+union
+select '-' as employee, to_char(department_id) as department_id , department_name as department_name, '-' as city
+from departments d
+union
+select '-' as employee,'-' as department_id , '-' as department_name, city
+from locations;
+
+31) with aux as (select department_id, avg(salary) as Prom
+             from employees
+             group by department_id
+             order by department_id)
+SELECT (substr(first_name,1,1) || ' ' || last_name) as "Employee", e.salary as "Salary", d.department_name as "Department Name"
+from employees e, departments d, aux
+where e.salary > aux.Prom and e.department_id = aux.department_id and e.department_id = d.department_id;
